@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro QR Code Studio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QRCode.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f5ff',
+                            100: '#e0ebff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans transition-colors duration-300 antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-brand-600 text-white rounded-xl shadow-lg shadow-brand-500/30">
+                    <i data-lucide="qr-code" class="w-6 h-6"></i>
+                </div>
+                <span class="font-bold text-xl tracking-tight bg-gradient-to-r from-brand-600 to-indigo-600 bg-clip-text text-transparent">
+                    QR Studio Pro
+                </span>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button id="theme-toggle" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all shadow-sm">
+                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                    <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Left Column: Controls & Configuration -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Format Selector Tabs -->
+                <div class="glass-card rounded-2xl p-2 shadow-xl shadow-slate-200/50 dark:shadow-none flex flex-wrap gap-1 border border-slate-200/80 dark:border-slate-800">
+                    <button data-preset="url" class="preset-tab flex-1 min-w-[90px] py-2.5 px-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all bg-brand-600 text-white shadow-md">
+                        <i data-lucide="link" class="w-4 h-4"></i> URL
+                    </button>
+                    <button data-preset="text" class="preset-tab flex-1 min-w-[90px] py-2.5 px-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="file-text" class="w-4 h-4"></i> Text
+                    </button>
+                    <button data-preset="wifi" class="preset-tab flex-1 min-w-[90px] py-2.5 px-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="wifi" class="w-4 h-4"></i> Wi-Fi
+                    </button>
+                    <button data-preset="email" class="preset-tab flex-1 min-w-[90px] py-2.5 px-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="mail" class="w-4 h-4"></i> Email
+                    </button>
+                    <button data-preset="phone" class="preset-tab flex-1 min-w-[90px] py-2.5 px-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="phone" class="w-4 h-4"></i> Phone
+                    </button>
+                </div>
+
+                <!-- Content Input Panel -->
+                <div class="glass-card rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-4">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="edit-3" class="w-5 h-5 text-brand-600"></i> Content Input
+                    </h2>
+
+                    <!-- URL Form -->
+                    <div id="form-url" class="form-section space-y-3">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Target URL</label>
+                        <input type="url" id="input-url" placeholder="https://example.com" value="https://github.com"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                    </div>
+
+                    <!-- Plain Text Form -->
+                    <div id="form-text" class="form-section space-y-3 hidden">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Text Content</label>
+                        <textarea id="input-text" rows="3" placeholder="Enter plain text, notes or messages..."
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none"></textarea>
+                    </div>
+
+                    <!-- Wi-Fi Form -->
+                    <div id="form-wifi" class="form-section space-y-4 hidden">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Network Name (SSID)</label>
+                            <input type="text" id="wifi-ssid" placeholder="Home WiFi Network"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Password</label>
+                                <input type="password" id="wifi-password" placeholder="Password"
+                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Encryption</label>
+                                <select id="wifi-encryption" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                                    <option value="WPA">WPA/WPA2/WPA3</option>
+                                    <option value="WEP">WEP</option>
+                                    <option value="nopass">None (Open)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email Form -->
+                    <div id="form-email" class="form-section space-y-4 hidden">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Recipient Email</label>
+                            <input type="email" id="email-address" placeholder="contact@example.com"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Subject</label>
+                            <input type="text" id="email-subject" placeholder="Inquiry about services"
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Message Body</label>
+                            <textarea id="email-body" rows="2" placeholder="Hello..."
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Phone Form -->
+                    <div id="form-phone" class="form-section space-y-3 hidden">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Phone Number</label>
+                        <input type="tel" id="input-phone" placeholder="+1234567890"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                    </div>
+                </div>
+
+                <!-- Customization Options -->
+                <div class="glass-card rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-6">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-5 h-5 text-brand-600"></i> Styling & Customization
+                    </h2>
+
+                    <!-- Colors -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Foreground Color</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" id="color-fg" value="#000000" class="w-10 h-10 rounded-xl cursor-pointer border-0 bg-transparent">
+                                <span id="fg-hex" class="text-sm font-mono font-medium uppercase text-slate-600 dark:text-slate-400">#000000</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Background Color</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" id="color-bg" value="#ffffff" class="w-10 h-10 rounded-xl cursor-pointer border-0 bg-transparent">
+                                <span id="bg-hex" class="text-sm font-mono font-medium uppercase text-slate-600 dark:text-slate-400">#FFFFFF</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-200 dark:border-slate-800">
+
+                    <!-- Error Correction & Resolution -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Error Correction Level</label>
+                            <div class="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                                <button data-[level]="L" class="ecl-btn py-1.5 rounded-lg text-xs font-bold transition-all hover:bg-white dark:hover:bg-slate-800">L</button>
+                                <button data-[level]="M" class="ecl-btn py-1.5 rounded-lg text-xs font-bold transition-all hover:bg-white dark:hover:bg-slate-800">M</button>
+                                <button data-[level]="Q" class="ecl-btn py-1.5 rounded-lg text-xs font-bold transition-all hover:bg-white dark:hover:bg-slate-800">Q</button>
+                                <button data-[level]="H" class="ecl-btn py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 shadow-sm text-brand-600">H</button>
+                            </div>
+                            <span class="text-[11px] text-slate-400 mt-1 block">High level (H) recommended when adding custom logos.</span>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Output Size</label>
+                                <span id="size-display" class="text-xs font-mono font-bold text-brand-600">400px</span>
+                            </div>
+                            <input type="range" id="size-slider" min="200" max="1000" step="50" value="400"
+                                class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-brand-600">
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-200 dark:border-slate-800">
+
+                    <!-- Logo Overlay Options -->
+                    <div class="space-y-4">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Center Logo Overlay</label>
+                        <div class="flex flex-col sm:flex-row items-center gap-4">
+                            <label class="w-full sm:w-auto flex-1 cursor-pointer flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-500 rounded-xl transition-all">
+                                <i data-lucide="image" class="w-5 h-5 text-slate-400"></i>
+                                <span class="text-sm font-medium text-slate-600 dark:text-slate-300" id="logo-file-label">Upload Image File</span>
+                                <input type="file" id="logo-input" accept="image/*" class="hidden">
+                            </label>
+                            <button id="remove-logo" class="w-full sm:w-auto hidden px-4 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl border border-red-200 dark:border-red-900/50 text-sm font-semibold transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i> Remove
+                            </button>
+                        </div>
+                        
+                        <!-- Logo Scale Slider (visible when logo uploaded) -->
+                        <div id="logo-size-wrapper" class="hidden space-y-1">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-slate-500">Logo Scale</span>
+                                <span id="logo-size-display" class="text-xs font-mono font-medium text-slate-600 dark:text-slate-400">20%</span>
+                            </div>
+                            <input type="range" id="logo-size-slider" min="10" max="30" step="1" value="20"
+                                class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-brand-600">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Interactive Live Preview & Exports -->
+            <div class="lg:col-span-5 sticky top-24">
+                <div class="glass-card rounded-2xl p-6 shadow-2xl shadow-slate-200/50 dark:shadow-none flex flex-col items-center justify-center text-center space-y-6">
+                    
+                    <div class="w-full flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Live Render</span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Ready
+                        </span>
+                    </div>
+
+                    <!-- Main Canvas Rendering Display -->
+                    <div class="relative group p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner max-w-full overflow-hidden flex items-center justify-center min-h-[300px] min-w-[300px]">
+                        <div id="qrcode-hidden" class="hidden"></div>
+                        <canvas id="main-canvas" class="max-w-full h-auto rounded-lg shadow-sm transition-transform duration-200 group-hover:scale-[1.01]"></canvas>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="w-full grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button id="btn-download-png" class="py-3 px-4 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2 text-sm">
+                            <i data-lucide="download" class="w-4 h-4"></i> PNG
+                        </button>
+                        <button id="btn-download-svg" class="py-3 px-4 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-sm dark:bg-slate-700 dark:hover:bg-slate-600">
+                            <i data-lucide="file-code" class="w-4 h-4"></i> SVG
+                        </button>
+                        <button id="btn-copy-clipboard" class="py-3 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-xl border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-2 text-sm">
+                            <i data-lucide="copy" class="w-4 h-4"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Client Application Logic -->
+    <script>
+        // State Management
+        const state = {
+            activePreset: 'url',
+            fgColor: '#000000',
+            bgColor: '#ffffff',
+            ecl: 'H',
+            size: 400,
+            logoImg: null,
+            logoScale: 0.2,
+            currentText: ''
+        };
+
+        // DOM Elements Initialization
+        const elements = {
+            canvas: document.getElementById('main-canvas'),
+            ctx: document.getElementById('main-canvas').getContext('2d'),
+            qrcodeHidden: document.getElementById('qrcode-hidden'),
+            colorFg: document.getElementById('color-fg'),
+            colorBg: document.getElementById('color-bg'),
+            fgHex: document.getElementById('fg-hex'),
+            bgHex: document.getElementById('bg-hex'),
+            sizeSlider: document.getElementById('size-slider'),
+            sizeDisplay: document.getElementById('size-display'),
+            logoInput: document.getElementById('logo-input'),
+            logoFileLabel: document.getElementById('logo-file-label'),
+            removeLogoBtn: document.getElementById('remove-logo'),
+            logoSizeWrapper: document.getElementById('logo-size-wrapper'),
+            logoSizeSlider: document.getElementById('logo-size-slider'),
+            logoSizeDisplay: document.getElementById('logo-size-display'),
+            presetTabs: document.querySelectorAll('.preset-tab'),
+            formSections: document.querySelectorAll('.form-section'),
+            eclBtns: document.querySelectorAll('.ecl-btn'),
+            btnPng: document.getElementById('btn-download-png'),
+            btnSvg: document.getElementById('btn-download-svg'),
+            btnCopy: document.getElementById('btn-copy-clipboard'),
+            themeToggle: document.getElementById('theme-toggle')
+        };
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Dark/Light Theme Handler
+        function initTheme() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+        }
+        elements.themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+        initTheme();
+
+        // Toast Helper
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl text-white text-sm font-medium transition-all transform duration-300 translate-y-2 opacity-0 ${
+                type === 'error' ? 'bg-red-600' : 'bg-slate-900 dark:bg-slate-100 dark:text-slate-900'
+            }`;
+            toast.innerHTML = `<i data-lucide="${type === 'error' ? 'alert-circle' : 'check-circle'}" class="w-4 h-4"></i> ${message}`;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Construct raw data based on active tab inputs
+        function getPayload() {
+            switch(state.activePreset) {
+                case 'url':
+                    return document.getElementById('input-url').value.trim() || 'https://github.com';
+                case 'text':
+                    return document.getElementById('input-text').value.trim() || 'Hello World';
+                case 'wifi':
+                    const ssid = document.getElementById('wifi-ssid').value.trim();
+                    const pass = document.getElementById('wifi-password').value;
+                    const enc = document.getElementById('wifi-encryption').value;
+                    return `WIFI:S:${ssid};T:${enc};P:${pass};;`;
+                case 'email':
+                    const mail = document.getElementById('email-address').value.trim();
+                    const sub = encodeURIComponent(document.getElementById('email-subject').value.trim());
+                    const body = encodeURIComponent(document.getElementById('email-body').value.trim());
+                    return `mailto:${mail}?subject=${sub}&body=${body}`;
+                case 'phone':
+                    const phone = document.getElementById('input-phone').value.trim();
+                    return `tel:${phone}`;
+                default:
+                    return 'https://github.com';
+            }
+        }
+
+        // Core Render Function
+        function renderQRCode() {
+            state.currentText = getPayload();
+            elements.qrcodeHidden.innerHTML = '';
+
+            try {
+                // Map ECL String to QRCode.js Constants
+                let correctLevel = QRCode.CorrectLevel.H;
+                if (state.ecl === 'L') correctLevel = QRCode.CorrectLevel.L;
+                if (state.ecl === 'M') correctLevel = QRCode.CorrectLevel.M;
+                if (state.ecl === 'Q') correctLevel = QRCode.CorrectLevel.Q;
+
+                // Create offscreen temp QR node using QRCode.js
+                const tempQr = new QRCode(elements.qrcodeHidden, {
+                    text: state.currentText,
+                    width: state.size,
+                    height: state.size,
+                    colorDark: state.fgColor,
+                    colorLight: state.bgColor,
+                    correctLevel: correctLevel
+                });
+
+                // Wait briefly for library DOM generation canvas/image
+                setTimeout(() => {
+                    const generatedImage = elements.qrcodeHidden.querySelector('img') || elements.qrcodeHidden.querySelector('canvas');
+                    if (!generatedImage) return;
+
+                    const drawCanvas = () => {
+                        elements.canvas.width = state.size;
+                        elements.canvas.height = state.size;
+
+                        // Fill background
+                        elements.ctx.fillStyle = state.bgColor;
+                        elements.ctx.fillRect(0, 0, state.size, state.size);
+
+                        // Draw QR Image
+                        elements.ctx.drawImage(generatedImage, 0, 0, state.size, state.size);
+
+                        // Draw Logo Overlay if specified
+                        if (state.logoImg) {
+                            const logoSize = state.size * state.logoScale;
+                            const x = (state.size - logoSize) / 2;
+                            const y = (state.size - logoSize) / 2;
+                            const padding = 8;
+
+                            // White background badge under logo for visual separation
+                            elements.ctx.fillStyle = state.bgColor;
+                            elements.ctx.beginPath();
+                            elements.ctx.roundRect(x - padding, y - padding, logoSize + padding * 2, logoSize + padding * 2, 8);
+                            elements.ctx.fill();
+
+                            // Draw image
+                            elements.ctx.drawImage(state.logoImg, x, y, logoSize, logoSize);
+                        }
+                    };
+
+                    if (generatedImage.complete || generatedImage.tagName.toLowerCase() === 'canvas') {
+                        drawCanvas();
+                    } else {
+                        generatedImage.onload = drawCanvas;
+                    }
+                }, 50);
+            } catch (err) {
+                console.error("QR Code Generation Error:", err);
+            }
+        }
+
+        // Event Listeners Configuration
+        function attachEvents() {
+            // Tab switching
+            elements.presetTabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    const preset = e.currentTarget.getAttribute('data-preset');
+                    state.activePreset = preset;
+
+                    elements.presetTabs.forEach(t => {
+                        t.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+                        t.classList.add('text-slate-600', 'dark:text-slate-400');
+                    });
+                    e.currentTarget.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+                    e.currentTarget.classList.remove('text-slate-600', 'dark:text-slate-400');
+
+                    elements.formSections.forEach(sec => sec.classList.add('hidden'));
+                    document.getElementById(`form-${preset}`).classList.remove('hidden');
+
+                    renderQRCode();
+                });
+            });
+
+            // Text Inputs Live Updating
+            const allInputs = document.querySelectorAll('input, textarea, select');
+            allInputs.forEach(input => {
+                input.addEventListener('input', renderQRCode);
+            });
+
+            // Color Picker Events
+            elements.colorFg.addEventListener('input', (e) => {
+                state.fgColor = e.target.value;
+                elements.fgHex.textContent = e.target.value;
+                renderQRCode();
+            });
+            elements.colorBg.addEventListener('input', (e) => {
+                state.bgColor = e.target.value;
+                elements.bgHex.textContent = e.target.value;
+                renderQRCode();
+            });
+
+            // Error Correction Level Selector
+            elements.eclBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    elements.eclBtns.forEach(b => {
+                        b.classList.remove('bg-white', 'dark:bg-slate-800', 'shadow-sm', 'text-brand-600');
+                    });
+                    e.currentTarget.classList.add('bg-white', 'dark:bg-slate-800', 'shadow-sm', 'text-brand-600');
+                    state.ecl = e.currentTarget.getAttribute('data-[level]');
+                    renderQRCode();
+                });
+            });
+
+            // Size Slider Event
+            elements.sizeSlider.addEventListener('input', (e) => {
+                state.size = parseInt(e.target.value);
+                elements.sizeDisplay.textContent = `${state.size}px`;
+                renderQRCode();
+            });
+
+            // Logo Scale Slider Event
+            elements.logoSizeSlider.addEventListener('input', (e) => {
+                state.logoScale = parseInt(e.target.value) / 100;
+                elements.logoSizeDisplay.textContent = `${e.target.value}%`;
+                renderQRCode();
+            });
+
+            // Logo Upload & Handling
+            elements.logoInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            state.logoImg = img;
+                            elements.logoFileLabel.textContent = file.name;
+                            elements.removeLogoBtn.classList.remove('hidden');
+                            elements.logoSizeWrapper.classList.remove('hidden');
+                            renderQRCode();
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Remove Logo Action
+            elements.removeLogoBtn.addEventListener('click', () => {
+                state.logoImg = null;
+                elements.logoInput.value = '';
+                elements.logoFileLabel.textContent = 'Upload Image File';
+                elements.removeLogoBtn.classList.add('hidden');
+                elements.logoSizeWrapper.classList.add('hidden');
+                renderQRCode();
+            });
+
+            // Download PNG Action
+            elements.btnPng.addEventListener('click', () => {
+                const link = document.createElement('a');
+                link.download = `qrcode-${Date.now()}.png`;
+                link.href = elements.canvas.toDataURL('image/png');
+                link.click();
+                showToast('PNG downloaded successfully!');
+            });
+
+            // Download Vector SVG Export
+            elements.btnSvg.addEventListener('click', () => {
+                // Vector Canvas to SVG construction
+                const svgString = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="${state.size}" height="${state.size}">
+                        <rect width="100%" height="100%" fill="${state.bgColor}"/>
+                        <image href="${elements.canvas.toDataURL()}" width="${state.size}" height="${state.size}"/>
+                    </svg>
+                `;
+                const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                const link = document.createElement('a');
+                link.download = `qrcode-${Date.now()}.svg`;
+                link.href = URL.createObjectURL(blob);
+                link.click();
+                showToast('SVG generated and downloaded!');
+            });
+
+            // Copy Image to Clipboard
+            elements.btnCopy.addEventListener('click', async () => {
+                try {
+                    elements.canvas.toBlob(async (blob) => {
+                        const item = new ClipboardItem({ 'image/png': blob });
+                        await navigator.clipboard.write([item]);
+                        showToast('QR Code copied to clipboard!');
+                    });
+                } catch (err) {
+                    showToast('Failed to copy to clipboard', 'error');
+                }
+            });
+        }
+
+        // App Initialization Sequence
+        window.onload = () => {
+            attachEvents();
+            renderQRCode();
+        };
+    </script>
+</body>
+</html>
